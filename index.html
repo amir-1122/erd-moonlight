@@ -721,7 +721,7 @@
             class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">email</span><span
             class="field-type">VARCHAR(255)</span><span class="field-extra">UNIQUE NOT NULL</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">password_hash</span><span
+        <div class="field-row"><span class="field-key"></span><span class="field-name">password</span><span
             class="field-type">VARCHAR(255)</span><span class="field-extra">NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">user_type</span><span
             class="field-type">ENUM</span><span class="field-extra">facility / provider / admin</span></div>
@@ -788,7 +788,7 @@
             class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
         <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">user_id</span><span
             class="field-type">UUID FK → users</span><span class="field-extra">CASCADE</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">refresh_token_hash</span><span
+        <div class="field-row"><span class="field-key"></span><span class="field-name">refresh_token</span><span
             class="field-type">TEXT</span><span class="field-extra">UNIQUE NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">device_type</span><span
             class="field-type">ENUM</span><span class="field-extra">ios / android / web</span></div>
