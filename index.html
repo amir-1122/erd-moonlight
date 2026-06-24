@@ -675,8 +675,8 @@
 
   <!-- ═══════════════════ STATS ════════════════════ -->
   <div class="stats-bar">
-    <div class="stat"><span class="stat-val">22</span><span class="stat-label">Tables</span></div>
-    <div class="stat"><span class="stat-val">17</span><span class="stat-label">ENUMs</span></div>
+    <div class="stat"><span class="stat-val">23</span><span class="stat-label">Tables</span></div>
+    <div class="stat"><span class="stat-val">20</span><span class="stat-label">ENUMs</span></div>
     <div class="stat"><span class="stat-val">22</span><span class="stat-label">Indexes</span></div>
     <div class="stat"><span class="stat-val">9</span><span class="stat-label">Modules</span></div>
     <div class="stat"><span class="stat-val">3</span><span class="stat-label">User Types</span></div>
@@ -721,7 +721,7 @@
             class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">email</span><span
             class="field-type">VARCHAR(255)</span><span class="field-extra">UNIQUE NOT NULL</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">password</span><span
+        <div class="field-row"><span class="field-key"></span><span class="field-name">password_hash</span><span
             class="field-type">VARCHAR(255)</span><span class="field-extra">NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">user_type</span><span
             class="field-type">ENUM</span><span class="field-extra">facility / provider / admin</span></div>
@@ -757,22 +757,28 @@
             class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
         <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">user_id</span><span
             class="field-type">UUID FK → users</span><span class="field-extra">CASCADE</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">otp_code</span><span
-            class="field-type">VARCHAR(6)</span><span class="field-extra">STORE HASH NOT PLAINTEXT — use SHA-256 or bcrypt; plaintext OTP is a security risk on healthcare platform</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">otp_hash</span><span
+            class="field-type">VARCHAR(255)</span><span class="field-extra">SHA-256 hash of OTP · primary verification field</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">otp_code</span><span
+            class="field-type">VARCHAR(6)</span><span class="field-extra">⚠ DEV ONLY — remove in production</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">purpose</span><span
             class="field-type">ENUM</span><span class="field-extra">registration / password_reset /
-            session_expired</span></div>
+            session_expired / email_verification / two_factor_auth</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">expires_at</span><span
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">+10 min from creation</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">attempt_count</span><span
             class="field-type">SMALLINT</span><span class="field-extra">DEFAULT 0 · max 3</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">is_used</span><span
             class="field-type">BOOLEAN</span><span class="field-extra">DEFAULT FALSE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">ip_address</span><span
+            class="field-type">INET</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">user_agent</span><span
+            class="field-type">TEXT</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">created_at</span><span
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
         <div class="divider"></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">INDEX</span><span
-            class="field-extra">user_id, purpose, is_used</span></div>
+            class="field-extra">user_id, purpose, is_used · expires_at, is_used</span></div>
       </div>
     </div>
 
@@ -788,20 +794,99 @@
             class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
         <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">user_id</span><span
             class="field-type">UUID FK → users</span><span class="field-extra">CASCADE</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">refresh_token</span><span
+        <div class="field-row"><span class="field-key"></span><span class="field-name">refresh_token_hash</span><span
             class="field-type">TEXT</span><span class="field-extra">UNIQUE NOT NULL</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">access_token_hash</span><span
+            class="field-type">TEXT</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">device_type</span><span
-            class="field-type">ENUM</span><span class="field-extra">ios / android / web</span></div>
+            class="field-type">ENUM</span><span class="field-extra">ios / android / web / ipad / macos / windows</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">device_name</span><span
             class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">device_id</span><span
+            class="field-type">VARCHAR(255)</span><span class="field-extra">unique device identifier</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">ip_address</span><span
+            class="field-type">INET</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">user_agent</span><span
+            class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">location</span><span
+            class="field-type">VARCHAR(255)</span><span class="field-extra">City, Country</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">fcm_token</span><span
             class="field-type">TEXT</span><span class="field-extra">push notifications</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">expires_at</span><span
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">is_revoked</span><span
             class="field-type">BOOLEAN</span><span class="field-extra">DEFAULT FALSE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">revoked_at</span><span
+            class="field-type">TIMESTAMPTZ</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">revoked_reason</span><span
+            class="field-type">VARCHAR(255)</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">created_at</span><span
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
+        <div class="divider"></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">INDEX</span><span
+            class="field-extra">user_id, is_revoked · refresh_token_hash · expires_at · user_id, device_id</span></div>
+      </div>
+    </div>
+
+    <!-- password_reset_tokens -->
+    <div class="table-card" data-module="auth">
+      <div class="table-header">
+        <div class="table-icon icon-auth">🔐</div>
+        <div class="table-name">password_reset_tokens</div>
+        <div class="table-module mod-auth">AUTH</div>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-key pk">🔑</span><span class="field-name">token_id</span><span
+            class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
+        <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">user_id</span><span
+            class="field-type">UUID FK → users</span><span class="field-extra">CASCADE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">token</span><span
+            class="field-type">VARCHAR(255)</span><span class="field-extra">UNIQUE · hashed</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">expires_at</span><span
+            class="field-type">TIMESTAMPTZ</span><span class="field-extra">NOT NULL</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">is_used</span><span
+            class="field-type">BOOLEAN</span><span class="field-extra">DEFAULT FALSE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">ip_address</span><span
+            class="field-type">INET</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">user_agent</span><span
+            class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">created_at</span><span
+            class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
+        <div class="divider"></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">INDEX</span><span
+            class="field-extra">token · user_id, is_used · expires_at</span></div>
+      </div>
+    </div>
+
+    <!-- login_history -->
+    <div class="table-card" data-module="auth">
+      <div class="table-header">
+        <div class="table-icon icon-auth">📋</div>
+        <div class="table-name">login_history</div>
+        <div class="table-module mod-auth">AUTH</div>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-key pk">🔑</span><span class="field-name">login_id</span><span
+            class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
+        <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">user_id</span><span
+            class="field-type">UUID FK → users</span><span class="field-extra">CASCADE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">ip_address</span><span
+            class="field-type">INET</span><span class="field-extra">NOT NULL</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">user_agent</span><span
+            class="field-type">TEXT</span><span class="field-extra">NOT NULL</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">device_type</span><span
+            class="field-type">ENUM</span><span class="field-extra">ios / android / web / ipad / macos / windows</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">location</span><span
+            class="field-type">VARCHAR(255)</span><span class="field-extra">City, Country</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">login_successful</span><span
+            class="field-type">BOOLEAN</span><span class="field-extra">DEFAULT TRUE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">failure_reason</span><span
+            class="field-type">VARCHAR(255)</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">created_at</span><span
+            class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
+        <div class="divider"></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">INDEX</span><span
+            class="field-extra">user_id, login_successful · created_at · ip_address</span></div>
       </div>
     </div>
 
@@ -924,16 +1009,28 @@
             class="field-type">VARCHAR(100)</span><span class="field-extra">NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">provider_type</span><span
             class="field-type">ENUM</span><span class="field-extra">physician (v1 only)</span></div>
-        <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">specialty_id</span><span
-            class="field-type">UUID FK → specialties</span><span class="field-extra">CASCADE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">date_of_birth</span><span
+            class="field-type">DATE</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">ssn_last4</span><span
+            class="field-type">VARCHAR(4)</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">address</span><span
+            class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">city</span><span
+            class="field-type">VARCHAR(100)</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">state</span><span
+            class="field-type">VARCHAR(50)</span><span class="field-extra">DEFAULT 'MI'</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">zip_code</span><span
+            class="field-type">VARCHAR(20)</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">residency</span><span
+            class="field-type">ENUM</span><span class="field-extra">emergency_medicine / internal_medicine / family_medicine · nullable</span></div>
+        <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name nullable">certificate_document_id</span><span
+            class="field-type">UUID FK → provider_credentials</span><span class="field-extra">SET NULL · 1:1</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">phone</span><span
             class="field-type">VARCHAR(20)</span><span class="field-extra">NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name nullable">profile_image_url</span><span class="field-type">TEXT</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">bio</span><span
-            class="field-type">TEXT</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">state</span><span
-            class="field-type">VARCHAR(50)</span><span class="field-extra">DEFAULT 'MI'</span></div>
+        <div class="field-row"><span class="field-key"></span><span
+            class="field-name nullable">profile_image_thumbnail_url</span><span class="field-type">TEXT</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name">profile_completion_pct</span><span class="field-type">SMALLINT</span><span
             class="field-extra">DEFAULT 0 · 0–100</span></div>
@@ -959,7 +1056,7 @@
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
         <div class="divider"></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">INDEX</span><span
-            class="field-extra">verification_status, specialty, state</span></div>
+            class="field-extra">verification_status, state · provider_type, verification_status · first_name, last_name · residency</span></div>
       </div>
     </div>
 
@@ -976,10 +1073,18 @@
         <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">provider_id</span><span
             class="field-type">UUID FK → providers</span><span class="field-extra">CASCADE</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">credential_type</span><span
-            class="field-type">ENUM</span><span class="field-extra">medical_license / dea_license / board_cert /
-            malpractice_insurance / background_check / cme / other</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">credential_name</span><span
-            class="field-type">VARCHAR(255)</span><span class="field-extra">NOT NULL</span></div>
+            class="field-type">ENUM</span><span class="field-extra">personal_info / medical_school / residency_emergency_medicine / residency_internal_medicine / residency_family_medicine / certificate / medical_license / dea_license / controlled_substances / physician_license / health_facility_license / pharmacy_license / cms_certification / clia_certificate / certificate_of_need / acls / atls / bls / pals / board_cert / step_3 / usmle / comlex / liability_insurance / malpractice_insurance / payment_info / other</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">document_name</span><span
+            class="field-type">VARCHAR(255)</span><span class="field-extra">original file name</span></div>
+        <div class="field-row"><span class="field-key"></span><span
+            class="field-name nullable">document_url</span><span
+            class="field-type">TEXT</span><span class="field-extra">S3 / storage key</span></div>
+        <div class="field-row"><span class="field-key"></span><span
+            class="field-name nullable">document_thumbnail_url</span><span class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">file_size</span><span
+            class="field-type">INTEGER</span><span class="field-extra">bytes</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">file_type</span><span
+            class="field-type">VARCHAR(100)</span><span class="field-extra">MIME type</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name nullable">issuing_authority</span><span class="field-type">VARCHAR(255)</span><span
             class="field-extra">e.g. Michigan LARA</span></div>
@@ -989,41 +1094,26 @@
             class="field-type">DATE</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">expiry_date</span><span
             class="field-type">DATE</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">document_url</span><span
-            class="field-type">TEXT</span><span class="field-extra">S3 / storage key</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">verification_status</span><span
-            class="field-type">ENUM</span><span class="field-extra">pending / approved / rejected / expired</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">residency_value</span><span
+            class="field-type">ENUM</span><span class="field-extra">emergency_medicine / internal_medicine / family_medicine · for residency credential rows</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">status</span><span
+            class="field-type">ENUM</span><span class="field-extra">not_uploaded / uploaded / under_review / approved / rejected / expired</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name nullable">rejection_reason</span><span class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">admin_notes</span><span
+            class="field-type">TEXT</span></div>
         <div class="field-row"><span class="field-key fk">🔗</span><span
             class="field-name nullable">reviewed_by</span><span class="field-type">UUID FK → admin_users</span><span
             class="field-extra">SET NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">reviewed_at</span><span
             class="field-type">TIMESTAMPTZ</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name">expiry_notification_sent</span><span
+            class="field-type">BOOLEAN</span><span class="field-extra">DEFAULT FALSE</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name nullable">deleted_at</span><span
             class="field-type">TIMESTAMPTZ</span><span class="field-extra"> DEFAULT NOW()</span></div>        
         <div class="field-row"><span class="field-key"></span><span class="field-name">created_at</span><span
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
-      </div>
-    </div>
-
-    <!-- specialties (lookup table) -->
-    <div class="table-card" data-module="provider">
-      <div class="table-header" >
-        <div class="table-icon icon-provider">🩺</div>
-        <div class="table-name">specialties</div>
-        <div class="table-module mod-provider">PROVIDER</div>
-      </div>
-      <div class="table-body">
-        <div class="field-row"><span class="field-key pk">🔑</span><span class="field-name">specialty_id</span><span class="field-type">UUID PK</span><span class="field-extra">gen_random_uuid()</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">name</span><span class="field-type">VARCHAR(100)</span><span class="field-extra">UNIQUE NOT NULL · e.g. "Cardiology", "Emergency Medicine"</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">description</span><span class="field-type">TEXT</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">is_active</span><span class="field-type">BOOLEAN</span><span class="field-extra">DEFAULT TRUE · admin-managed</span></div>
-      <div class="field-row"><span class="field-key"></span><span
-            class="field-name nullable">deleted_at</span><span
-            class="field-type">TIMESTAMPTZ</span><span class="field-extra"> DEFAULT NOW()</span></div>          
-        <div class="field-row"><span class="field-key"></span><span class="field-name">created_at</span><span class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
       </div>
     </div>
 
@@ -1088,8 +1178,6 @@
             class="field-extra">SET NULL · duplication lineage</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">shift_title</span><span
             class="field-type">VARCHAR(255)</span><span class="field-extra">NOT NULL</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name">specialty_id</span><span
-            class="field-type">UUID FK -> specialties</span><span class="field-extra">CASCADE</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">shift_date</span><span
             class="field-type">DATE</span><span class="field-extra">NOT NULL</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">start_time</span><span
@@ -1803,6 +1891,10 @@
           class="rel-to">users</span><span class="rel-on-delete">CASCADE</span><span class="rel-type">N:1</span></div>
       <div class="rel-row"><span class="rel-from">user_sessions</span><span class="rel-arrow">.user_id →</span><span
           class="rel-to">users</span><span class="rel-on-delete">CASCADE</span><span class="rel-type">N:1</span></div>
+      <div class="rel-row"><span class="rel-from">password_reset_tokens</span><span class="rel-arrow">.user_id →</span><span
+          class="rel-to">users</span><span class="rel-on-delete">CASCADE</span><span class="rel-type">N:1</span></div>
+      <div class="rel-row"><span class="rel-from">login_history</span><span class="rel-arrow">.user_id →</span><span
+          class="rel-to">users</span><span class="rel-on-delete">CASCADE</span><span class="rel-type">N:1 · audit log</span></div>
 
       <div class="rel-group-title">FACILITY</div>
       <div class="rel-row"><span class="rel-from">facilities</span><span class="rel-arrow">.user_id →</span><span
@@ -1820,9 +1912,12 @@
       <div class="rel-group-title">PROVIDER</div>
       <div class="rel-row"><span class="rel-from">providers</span><span class="rel-arrow">.user_id →</span><span
           class="rel-to">users</span><span class="rel-on-delete">CASCADE</span><span class="rel-type">1:1</span></div>
+      <div class="rel-row"><span class="rel-from">providers</span><span class="rel-arrow">.certificate_document_id →</span><span
+          class="rel-to">provider_credentials</span><span class="rel-on-delete">SET NULL</span><span
+          class="rel-type">1:1 nullable · certificate credential</span></div>
       <div class="rel-row"><span class="rel-from">provider_credentials</span><span class="rel-arrow">.provider_id
           →</span><span class="rel-to">providers</span><span class="rel-on-delete">CASCADE</span><span
-          class="rel-type">N:1</span></div>
+          class="rel-type">N:1 · UNIQUE (provider_id, credential_type)</span></div>
       <div class="rel-row"><span class="rel-from">provider_credentials</span><span class="rel-arrow">.reviewed_by
           →</span><span class="rel-to">admin_users</span><span class="rel-on-delete">SET NULL</span><span
           class="rel-type">N:1 nullable</span></div>
@@ -1900,7 +1995,7 @@
 
   <!-- ═══════════════════ ENUMS ════════════════════ -->
   <div class="enums-section">
-    <div class="relations-title" style="color:var(--purple)">📦 ENUMs (17)</div>
+    <div class="relations-title" style="color:var(--purple)">📦 ENUMs (20)</div>
     <div class="enums-grid">
 
       <div class="enum-card">
@@ -1912,13 +2007,13 @@
       <div class="enum-card">
         <div class="enum-header">account_status</div>
         <div class="enum-vals"><span class="enum-val">active</span><span class="enum-val">suspended</span><span
-            class="enum-val">pending_verification</span></div>
+            class="enum-val">pending_verification</span><span class="enum-val">locked</span></div>
       </div>
 
       <div class="enum-card">
         <div class="enum-header">otp_purpose</div>
         <div class="enum-vals"><span class="enum-val">registration</span><span
-            class="enum-val">password_reset</span><span class="enum-val">session_expired</span></div>
+            class="enum-val">password_reset</span><span class="enum-val">session_expired</span><span class="enum-val">email_verification</span><span class="enum-val">two_factor_auth</span></div>
       </div>
 
       <div class="enum-card">
@@ -1948,11 +2043,23 @@
       </div>
 
       <div class="enum-card">
+        <div class="enum-header">residency_type</div>
+        <div class="enum-vals"><span class="enum-val">emergency_medicine</span><span class="enum-val">internal_medicine</span><span class="enum-val">family_medicine</span></div>
+      </div>
+
+      <div class="enum-card">
+        <div class="enum-header">credential_document_status</div>
+        <div class="enum-vals"><span class="enum-val">not_uploaded</span><span class="enum-val">uploaded</span><span class="enum-val">under_review</span><span class="enum-val">approved</span><span class="enum-val">rejected</span><span class="enum-val">expired</span></div>
+      </div>
+
+      <div class="enum-card">
+        <div class="enum-header">device_type</div>
+        <div class="enum-vals"><span class="enum-val">ios</span><span class="enum-val">android</span><span class="enum-val">web</span><span class="enum-val">ipad</span><span class="enum-val">macos</span><span class="enum-val">windows</span></div>
+      </div>
+
+      <div class="enum-card">
         <div class="enum-header">credential_type</div>
-        <div class="enum-vals"><span class="enum-val">medical_license</span><span
-            class="enum-val">dea_license</span><span class="enum-val">board_cert</span><span
-            class="enum-val">malpractice_insurance</span><span class="enum-val">background_check</span><span
-            class="enum-val">cme</span><span class="enum-val">other</span></div>
+        <div class="enum-vals"><span class="enum-val">personal_info</span><span class="enum-val">medical_school</span><span class="enum-val">residency_emergency_medicine</span><span class="enum-val">residency_internal_medicine</span><span class="enum-val">residency_family_medicine</span><span class="enum-val">certificate</span><span class="enum-val">medical_license</span><span class="enum-val">dea_license</span><span class="enum-val">controlled_substances</span><span class="enum-val">physician_license</span><span class="enum-val">health_facility_license</span><span class="enum-val">pharmacy_license</span><span class="enum-val">cms_certification</span><span class="enum-val">clia_certificate</span><span class="enum-val">certificate_of_need</span><span class="enum-val">acls</span><span class="enum-val">atls</span><span class="enum-val">bls</span><span class="enum-val">pals</span><span class="enum-val">board_cert</span><span class="enum-val">step_3</span><span class="enum-val">usmle</span><span class="enum-val">comlex</span><span class="enum-val">liability_insurance</span><span class="enum-val">malpractice_insurance</span><span class="enum-val">payment_info</span><span class="enum-val">other</span></div>
       </div>
 
       <div class="enum-card">
