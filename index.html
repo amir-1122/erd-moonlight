@@ -1031,6 +1031,8 @@
             class="field-name nullable">profile_image_url</span><span class="field-type">TEXT</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name nullable">profile_image_thumbnail_url</span><span class="field-type">TEXT</span></div>
+        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">npi_number</span><span
+            class="field-type">VARCHAR(50)</span><span class="field-extra">National Provider Identifier</span></div>
         <div class="field-row"><span class="field-key"></span><span
             class="field-name">profile_completion_pct</span><span class="field-type">SMALLINT</span><span
             class="field-extra">DEFAULT 0 · 0–100</span></div>
@@ -1073,7 +1075,7 @@
         <div class="field-row"><span class="field-key fk">🔗</span><span class="field-name">provider_id</span><span
             class="field-type">UUID FK → providers</span><span class="field-extra">CASCADE</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">credential_type</span><span
-            class="field-type">ENUM</span><span class="field-extra">personal_info / medical_school / residency_emergency_medicine / residency_internal_medicine / residency_family_medicine / certificate / medical_license / dea_license / controlled_substances / physician_license / health_facility_license / pharmacy_license / cms_certification / clia_certificate / certificate_of_need / acls / atls / bls / pals / board_cert / step_3 / usmle / comlex / liability_insurance / malpractice_insurance / payment_info / other</span></div>
+            class="field-type">ENUM</span><span class="field-extra">medical_school / certificate / board_cert / dea_license / controlled_substances / physician_license / acls / atls / bls / pals / exam_certificate / liability_insurance</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">document_name</span><span
             class="field-type">VARCHAR(255)</span><span class="field-extra">original file name</span></div>
         <div class="field-row"><span class="field-key"></span><span
@@ -1094,8 +1096,6 @@
             class="field-type">DATE</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">expiry_date</span><span
             class="field-type">DATE</span></div>
-        <div class="field-row"><span class="field-key"></span><span class="field-name nullable">residency_value</span><span
-            class="field-type">ENUM</span><span class="field-extra">emergency_medicine / internal_medicine / family_medicine · for residency credential rows</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">status</span><span
             class="field-type">ENUM</span><span class="field-extra">not_uploaded / uploaded / under_review / approved / rejected / expired</span></div>
         <div class="field-row"><span class="field-key"></span><span
@@ -1189,10 +1189,14 @@
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">description</span><span
             class="field-type">TEXT</span></div>
         <div class="field-row"><span class="field-key"></span><span
-            class="field-name nullable">room_certifications</span><span class="field-type">VARCHAR(255)[]</span><span
-            class="field-extra">e.g. ACLS, BLS, PALS</span></div>
+            class="field-name">life_support_required</span><span class="field-type">ENUM</span><span
+            class="field-extra">ACLS / BLS / PALS / NRP / none · DEFAULT none</span></div>
         <div class="field-row"><span class="field-key"></span><span
-            class="field-name nullable">life_support_required</span><span class="field-type">VARCHAR(100)</span></div>
+            class="field-name">board_certification</span><span class="field-type">ENUM</span><span
+            class="field-extra">required / not_required · DEFAULT not_required</span></div>
+        <div class="field-row"><span class="field-key"></span><span
+            class="field-name nullable">specialties</span><span class="field-type">ENUM</span><span
+            class="field-extra">internal_medicine / emergency_medicine / family_medicine</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name nullable">ehr_system</span><span
             class="field-type">VARCHAR(100)</span><span class="field-extra">Epic / Cerner / etc.</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">status</span><span
@@ -1209,7 +1213,7 @@
             class="field-type">TIMESTAMPTZ</span><span class="field-extra">DEFAULT NOW()</span></div>
         <div class="divider"></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">INDEX</span><span
-            class="field-extra">facility_id, status, shift_date, specialty_id, hourly_rate</span></div>
+            class="field-extra">facility_id, status, shift_date · status, shift_date · shift_date, start_time, end_time</span></div>
         <div class="field-row"><span class="field-key"></span><span class="field-name">CONSTRAINT</span><span
             class="field-extra">end_time > start_time</span></div>
       </div>
@@ -1995,7 +1999,7 @@
 
   <!-- ═══════════════════ ENUMS ════════════════════ -->
   <div class="enums-section">
-    <div class="relations-title" style="color:var(--purple)">📦 ENUMs (20)</div>
+    <div class="relations-title" style="color:var(--purple)">📦 ENUMs (22)</div>
     <div class="enums-grid">
 
       <div class="enum-card">
@@ -2059,7 +2063,7 @@
 
       <div class="enum-card">
         <div class="enum-header">credential_type</div>
-        <div class="enum-vals"><span class="enum-val">personal_info</span><span class="enum-val">medical_school</span><span class="enum-val">residency_emergency_medicine</span><span class="enum-val">residency_internal_medicine</span><span class="enum-val">residency_family_medicine</span><span class="enum-val">certificate</span><span class="enum-val">medical_license</span><span class="enum-val">dea_license</span><span class="enum-val">controlled_substances</span><span class="enum-val">physician_license</span><span class="enum-val">health_facility_license</span><span class="enum-val">pharmacy_license</span><span class="enum-val">cms_certification</span><span class="enum-val">clia_certificate</span><span class="enum-val">certificate_of_need</span><span class="enum-val">acls</span><span class="enum-val">atls</span><span class="enum-val">bls</span><span class="enum-val">pals</span><span class="enum-val">board_cert</span><span class="enum-val">step_3</span><span class="enum-val">usmle</span><span class="enum-val">comlex</span><span class="enum-val">liability_insurance</span><span class="enum-val">malpractice_insurance</span><span class="enum-val">payment_info</span><span class="enum-val">other</span></div>
+        <div class="enum-vals"><span class="enum-val">medical_school</span><span class="enum-val">certificate</span><span class="enum-val">board_cert</span><span class="enum-val">dea_license</span><span class="enum-val">controlled_substances</span><span class="enum-val">physician_license</span><span class="enum-val">acls</span><span class="enum-val">atls</span><span class="enum-val">bls</span><span class="enum-val">pals</span><span class="enum-val">exam_certificate</span><span class="enum-val">liability_insurance</span></div>
       </div>
 
       <div class="enum-card">
@@ -2067,6 +2071,16 @@
         <div class="enum-vals"><span class="enum-val">draft</span><span class="enum-val">published</span><span
             class="enum-val">filled</span><span class="enum-val">completed</span><span class="enum-val">cancelled</span>
         </div>
+      </div>
+
+      <div class="enum-card">
+        <div class="enum-header">board_certification_type</div>
+        <div class="enum-vals"><span class="enum-val">required</span><span class="enum-val">not_required</span></div>
+      </div>
+
+      <div class="enum-card">
+        <div class="enum-header">specialty_type</div>
+        <div class="enum-vals"><span class="enum-val">internal_medicine</span><span class="enum-val">emergency_medicine</span><span class="enum-val">family_medicine</span></div>
       </div>
 
       <div class="enum-card">
